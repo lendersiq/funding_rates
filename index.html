@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="main">
+        <title>funding rates</title>
+        <link rel="icon" href="favicon.png" type="image/png">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div class="accordion" id="accordionRates">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Long-Term
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionRates">
+                    <div class="accordion-body">
+                        <h6 class="effective-date"></h6>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">TERM</th><th scope="col">REG.</th><th scope="col">CDA</th><th scope="col">CDA EXTRA</th><th scope="col">NEF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="long-term-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Short-Term
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionRates">
+                    <div class="accordion-body">
+                        <h6 class="effective-date"></h6>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">TERM</th><th scope="col">REG.</th><th scope="col">CDA</th><th scope="col">CDA EXTRA</th><th scope="col">NEF</th>
+                                </tr>
+                            </thead>
+                            <tbody id="short-term-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Amortizing
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionRates">
+                    <div class="accordion-body">
+                        <h6 class="effective-date"></h6>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">TERM</th><th scope="col">AMORT</th><th scope="col">REG.</th><th scope="col">CDA</th><th scope="col">CDA EXTRA</th><th scope="col">NEF</th>  
+                                </tr>
+                            </thead>
+                            <tbody id="amortizing-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function $$filter_category(json, category) {
+                return json['Category'] == category
+            }
+            
+            function $$display_date(effectiveDate) {
+                let dates = document.getElementsByClassName("effective-date")
+                let _date =  effectiveDate.split("T")[0];
+                let _mdy = _date.split("-");
+                for (let i = 0; i < dates.length; i++) {
+                    dates[i].innerHTML = "Effective: " + _mdy[1] + '/' + _mdy[2] + '/' + _mdy[0]
+                }
+            }
+            
+            function $$clean_head(head) {
+                const _array = head.split(" ")
+                _array[1] = _array[1] == "yr" ? "Year" : _array[1] == "mo" ? "Month" : "Week"
+                return _array.join(' ')
+            }
+            
+            function $$build_row(id, json_obj, headers) {
+                let tbody = document.getElementById(id)
+                let row = document.createElement("tr")
+                let column_id = 0
+                let column = []
+                for (let header of headers) {
+                    column[column_id] = document.createElement("td")
+                    column[column_id].innerText = json_obj[header] == null ? 'N/A' : typeof json_obj[header] === 'string' ? $$clean_head(json_obj[header]) : parseFloat(json_obj[header]).toFixed(2).toLocaleString()
+                    row.appendChild(column[column_id])
+                    column_id++
+                }
+                tbody.appendChild(row)
+            }
+            
+            fetch("https://api.fhlbboston.com/rates/current?category=Classic%20Advance")
+                .then((response) => response.json())
+                .then((responseJSON) => {
+                    $$display_date(responseJSON[0].EffectiveDate);
+                    for (let term of ["1 yr", "2 yr", "3 yr", "5 yr", "7 yr", "10 yr", "20 yr"]) {
+                        selected = responseJSON.map((el) => el.Term).indexOf(term);
+                        $$build_row("long-term-table", responseJSON[selected], ["Term", "REG", "CDA", "CDAExtra", "NEF"])
+                    }
+                    for (let term of ["1 wk", "2 wk", "3 wk", "1 mo", "2 mo", "3 mo", "6 mo", "9 mo"]) {
+                        selected = responseJSON.map((el) => el.Term).indexOf(term);
+                        $$build_row("short-term-table", responseJSON[selected], ["Term", "REG", "CDA", "CDAExtra", "NEF"])
+                    }
+                }
+            )
+            
+            _amort = ["2 yr", "5 yr", "20 yr", "7 yr", "10 yr", "20 yr", "20 yr", "30 yr"];
+            fetch("https://api.fhlbboston.com/rates/current?category=Amortizers")
+                .then((response) => response.json())
+                .then((responseJSON) => {
+                    _term_index = 0
+                    for (let term of ["2 yr", "5 yr", "5 yr", "7 yr", "10 yr", "10 yr", "20 yr", "20 yr"]) {
+                        for (let json of responseJSON) {
+                            if (json.Term == term && json.Amort == _amort[_term_index]) {
+                                $$build_row("amortizing-table", json, ["Term", "Amort", "REG", "CDA", "CDAExtra", "NEF"])
+                            }
+                        }
+                        _term_index++;
+                    }
+                }
+            )
+        </script>
+    </body>
+</html>

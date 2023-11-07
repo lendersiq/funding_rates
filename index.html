@@ -80,12 +80,11 @@
                 return json['Category'] == category
             }
             
-            function $$display_date(effectiveDate) {
-                let dates = document.getElementsByClassName("effective-date")
-                let _date =  effectiveDate.split("T")[0];
-                let _mdy = _date.split("-");
+           function $$display_date(effectiveDate) {
+                const dates = document.getElementsByClassName("effective-date")
+                const effective = new Date(effectiveDate)
                 for (let i = 0; i < dates.length; i++) {
-                    dates[i].innerHTML = "Effective: " + _mdy[1] + '/' + _mdy[2] + '/' + _mdy[0]
+                    dates[i].innerHTML = "Effective: " + effective.toDateString()
                 }
             }
             
@@ -112,19 +111,19 @@
             fetch("https://api.fhlbboston.com/rates/current?category=Classic%20Advance")
                 .then((response) => response.json())
                 .then((responseJSON) => {
-                    $$display_date(responseJSON[0].EffectiveDate);
+                    $$display_date(responseJSON[0].EffectiveDate)
                     for (let term of ["1 yr", "2 yr", "3 yr", "5 yr", "7 yr", "10 yr", "20 yr"]) {
-                        selected = responseJSON.map((el) => el.Term).indexOf(term);
+                        selected = responseJSON.map((el) => el.Term).indexOf(term)
                         $$build_row("long-term-table", responseJSON[selected], ["Term", "REG", "CDA", "CDAExtra", "NEF"])
                     }
                     for (let term of ["1 wk", "2 wk", "3 wk", "1 mo", "2 mo", "3 mo", "6 mo", "9 mo"]) {
-                        selected = responseJSON.map((el) => el.Term).indexOf(term);
+                        selected = responseJSON.map((el) => el.Term).indexOf(term)
                         $$build_row("short-term-table", responseJSON[selected], ["Term", "REG", "CDA", "CDAExtra", "NEF"])
                     }
                 }
             )
             
-            _amort = ["2 yr", "5 yr", "20 yr", "7 yr", "10 yr", "20 yr", "20 yr", "30 yr"];
+            _amort = ["2 yr", "5 yr", "20 yr", "7 yr", "10 yr", "20 yr", "20 yr", "30 yr"]
             fetch("https://api.fhlbboston.com/rates/current?category=Amortizers")
                 .then((response) => response.json())
                 .then((responseJSON) => {
@@ -135,7 +134,7 @@
                                 $$build_row("amortizing-table", json, ["Term", "Amort", "REG", "CDA", "CDAExtra", "NEF"])
                             }
                         }
-                        _term_index++;
+                        _term_index++
                     }
                 }
             )
